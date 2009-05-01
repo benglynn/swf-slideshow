@@ -9,63 +9,56 @@ package {
 	
 	public class openc_swfslideshow extends Sprite {
 		
-		private var configuration:XML;
-		
-		private var slides:Array;
+		private var numSlides:uint;
 		
 		private var resourcesDirectory:String = "../resources/";
 		
 		// Main constuctor
 		public function openc_swfslideshow() {
 			
-			// Load configuration file, assume name and location TODO: allow config URL to be passed in as QS
 			var loader:URLLoader = new URLLoader();
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
 			loader.addEventListener(Event.COMPLETE, handleXMLLoadComplete);
 			loader.load(new URLRequest(this.resourcesDirectory + 'config.xml'));
 		}
-		
-		private function readConfiguration():void {
-			trace('Reading configuration XML');
-			for each(var element:XML in this.configuration.elements()) {
+
+		private function handleXMLLoadComplete(event:Event):void {
+
+			try {
+				var config:XML = new XML(event.target.data);
 				
-				var src:String = this.resourcesDirectory + element.@src;
-				
-				// Try to load the requested swf
-				var loader:Loader = new Loader();
-				loader.contentLoaderInfo.addEventListener(Event.INIT, this.handleSlideLoadInit);
-				try {
+				numSlides = config.slide.length();
+				var count:uint = 0;
+				for each(var slide:XML in config.slide) {
+					var src:String = this.resourcesDirectory + slide.@src;
+					var loader:Loader = new Loader();
+					loader.contentLoaderInfo.addEventListener(
+						Event.COMPLETE,
+						function(index:uint):Function {
+							return function(e:Event):void {
+								handleSlideComplete(e, index);
+							}
+						}(count++)
+					);
 					loader.load(new URLRequest(src));
 				}
-				catch(e:Error) {
-					trace("Couldn't load", src);
-					trace(e.message);
-				}
-				
-			}
-		}
-		
-		private function handleSlideLoadInit(e:Event):void {
-			
-			var movie:MovieClip = e.target.content as MovieClip;
-			movie.gotoAndStop(1);
-			 
-			//trace(MovieClip(e.target.content).totalFrames);
-			this.addChild(movie);
-		}
-		
-		private function handleXMLLoadComplete(event:Event):void {
-			
-			// Try to parse the XML
-			try {
-				this.configuration = new XML(event.target.data);
-				this.readConfiguration();
 			}
 			catch(e:TypeError) {
-				trace("Could not parse configuration XML:");
 				trace(e.message);
 			}
-
+		}
+		
+		private function handleSlideComplete(e:Event, index:uint):void {
+			var movie:MovieClip = e.target.content as MovieClip;
+			movie.gotoAndStop(1);
+			movie.index = index;
+			//movie.visible = false;
+			this.addChild(movie);
+			
+			// If all the slides have loaded
+			if(numChildren == numSlides) {
+			}
 		}
 	}
+	
 }
