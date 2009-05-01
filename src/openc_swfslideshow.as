@@ -51,13 +51,25 @@ package {
 		private function handleSlideComplete(e:Event, index:uint):void {
 			var movie:MovieClip = e.target.content as MovieClip;
 			movie.gotoAndStop(1);
-			movie.index = index;
-			//movie.visible = false;
+			movie._index_ = index;
+			movie.visible = false;
 			this.addChild(movie);
 			
-			// If all the slides have loaded
+			// If all the slides have loaded, stack in order
 			if(numChildren == numSlides) {
+				for(var i:uint = 0 ; i < numChildren ; i++) {
+					var slide:MovieClip = this.getChildAt(i) as MovieClip;
+					//slide.x = slide.y = 20 * slide._index_;
+					this.setChildIndex(slide, slide._index_);
+				}
 			}
+			playSlide(0);
+		}
+		
+		private function playSlide(index:uint):void {
+			var movie:MovieClip = getChildAt(index) as MovieClip;
+			movie.visible = true;
+			movie.play(); 
 		}
 	}
 	
