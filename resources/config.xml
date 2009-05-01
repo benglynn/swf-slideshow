@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<openc-swfslideshow>
+	<slide src="banner-a.swf" href="http://www.bbc.co.uk/?banner=a"/>
+	<slide src="banner-b.swf" href="http://www.bbc.co.uk/?banner=b"/>
+	<slide src="banner-c.swf" href="http://www.bbc.co.uk/?banner=c"/>
+</openc-swfslideshow>
