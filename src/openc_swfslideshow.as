@@ -4,21 +4,27 @@ package {
 	import flash.events.*;
 	import flash.net.*;
 	import flash.utils.*;
-	
-	import mx.effects.easing.Linear;
+	import mx.effects.easing.*;
 
-	[SWF (width="800", height="500", frameRate="21", backgroundColor="0x000000", pageTitle="openc.swfslideshow")]
+	[SWF (frameRate="21", backgroundColor="0x000000", pageTitle="openc.swfslideshow")]
 	
 	public class openc_swfslideshow extends Sprite {
 		
 		private var numSlides:uint;
 		
-		private const CROSSFADE_DURATION:uint = 5;
+		private const CROSSFADE_DURATION:uint = 25;
 		
 		private var resourcesDirectory:String = "../resources/";
 		
 		// Main constuctor
 		public function openc_swfslideshow() {
+			
+			if(loaderInfo.parameters.hasOwnProperty('resourcesDirectory')) {
+				resourcesDirectory = loaderInfo.parameters['resourcesDirectory'];
+			}
+			
+			stage.scaleMode = StageScaleMode.NO_SCALE;
+			stage.align = StageAlign.TOP_LEFT;
 			
 			var loader:URLLoader = new URLLoader();
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
@@ -74,8 +80,8 @@ package {
 					this.setChildIndex(slide, numChildren - slide._sourceIndex_ - 1);
 				}
 				// Show all
-				for(var i:uint = 0 ; i < numChildren ; i++) {
-					getChildAt(i).visible = true;
+				for(var k:uint = 0 ; k < numChildren ; k++) {
+					getChildAt(k).visible = true;
 				}
 				// Kick off
 				playTopSlide();
@@ -90,12 +96,12 @@ package {
 		private function handleBannerEnterFrame(e:Event):void {
 			var movie:MovieClip = e.target as MovieClip;
 			
-			// If crossfade should begin
+			// If reveal should begin
 			if(movie.currentFrame > movie.totalFrames - CROSSFADE_DURATION) {
 				var time:Number = CROSSFADE_DURATION - (movie.totalFrames - movie.currentFrame);
 				var initialValue:Number = 1;
 				var totalChange:Number = -1;
-				movie.alpha = Linear.easeOut(time, initialValue, totalChange, CROSSFADE_DURATION);
+				movie.alpha = Exponential.easeIn(time, initialValue, totalChange, CROSSFADE_DURATION);
 			}
 			
 			// If this is the last frame
