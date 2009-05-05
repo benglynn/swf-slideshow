@@ -5,7 +5,7 @@ package {
 	import flash.net.*;
 	import flash.utils.*;
 
-	[SWF (width="600", height="300", frameRate="21", backgroundColor="0xf0f0f0", pageTitle="openc.swfslideshow")]
+	[SWF (width="800", height="500", frameRate="21", backgroundColor="0x000000", pageTitle="openc.swfslideshow")]
 	
 	public class openc_swfslideshow extends Sprite {
 		
@@ -26,7 +26,6 @@ package {
 
 			try {
 				var config:XML = new XML(event.target.data);
-				
 				numSlides = config.slide.length();
 				var count:uint = 0;
 				for each(var slide:XML in config.slide) {
@@ -34,11 +33,11 @@ package {
 					var loader:Loader = new Loader();
 					loader.contentLoaderInfo.addEventListener(
 						Event.COMPLETE,
-						function(index:uint):Function {
+						function(sourceIndex:uint, src:String):Function {
 							return function(e:Event):void {
-								handleSlideComplete(e, index);
+								handleSlideComplete(e, sourceIndex, src);
 							}
-						}(count++)
+						}(count++, src)
 					);
 					loader.load(new URLRequest(src));
 				}
@@ -48,28 +47,48 @@ package {
 			}
 		}
 		
-		private function handleSlideComplete(e:Event, index:uint):void {
+		private function handleSlideComplete(e:Event, sourceIndex:uint, src:String):void {
 			var movie:MovieClip = e.target.content as MovieClip;
 			movie.gotoAndStop(1);
-			movie._index_ = index;
-			movie.visible = false;
+			movie._sourceIndex_ = sourceIndex;
+			movie._src_ = src;
+			//movie.visible = false;
 			this.addChild(movie);
 			
 			// If all the slides have loaded, stack in order
 			if(numChildren == numSlides) {
+				// Create a children array s will itterate while mixing up stack
+				var children:Array = new Array(numChildren);
 				for(var i:uint = 0 ; i < numChildren ; i++) {
-					var slide:MovieClip = this.getChildAt(i) as MovieClip;
-					//slide.x = slide.y = 20 * slide._index_;
-					this.setChildIndex(slide, slide._index_);
+					children[i] = this.getChildAt(i);
+					trace(this.getChildAt(i));
+				}
+				// Stack as determined by XML source order
+				for(var i:uint = 0 ; i < numChildren ; i++) {
+					var slide:MovieClip = children[i] as MovieClip;
+					slide.x = slide.y = 20 * slide._sourceIndex_;
+					this.setChildIndex(slide, numChildren - slide._sourceIndex_ - 1);
 				}
 			}
-			playSlide(0);
+			//playSlide(0);
 		}
 		
 		private function playSlide(index:uint):void {
 			var movie:MovieClip = getChildAt(index) as MovieClip;
 			movie.visible = true;
+			movie.addEventListener(Event.ENTER_FRAME, handleBannerEnterFrame)
 			movie.play(); 
+		}
+		
+		private function handleBannerEnterFrame(e:Event):void {
+			var movie:MovieClip = e.target as MovieClip;
+			if(movie.currentFrame == movie.totalFrames) {
+				movie.removeEventListener(Event.ENTER_FRAME, handleBannerEnterFrame);
+				movie.visible = false;
+				movie.gotoAndStop(1);
+				setChildIndex(movie, numChildren-1)
+				playSlide(0);
+			}
 		}
 	}
 	
