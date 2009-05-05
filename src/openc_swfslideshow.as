@@ -14,7 +14,7 @@ package {
 		
 		private const CROSSFADE_DURATION:uint = 25;
 		
-		private var resourcesDirectory:String = "../resources/";
+		private var resourcesDirectory:String = "resources/";
 		
 		// Main constuctor
 		public function openc_swfslideshow() {
