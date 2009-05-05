@@ -50,6 +50,7 @@ package {
 		private function handleSlideComplete(e:Event, sourceIndex:uint, src:String):void {
 			var movie:MovieClip = e.target.content as MovieClip;
 			movie.gotoAndStop(1);
+			movie.visible = false;
 			movie._sourceIndex_ = sourceIndex;
 			movie._src_ = src;
 			//movie.visible = false;
@@ -61,22 +62,22 @@ package {
 				var children:Array = new Array(numChildren);
 				for(var i:uint = 0 ; i < numChildren ; i++) {
 					children[i] = this.getChildAt(i);
-					trace(this.getChildAt(i));
 				}
 				// Stack as determined by XML source order
-				for(var i:uint = 0 ; i < numChildren ; i++) {
-					var slide:MovieClip = children[i] as MovieClip;
+				for(var j:uint = 0 ; j < numChildren ; j++) {
+					var slide:MovieClip = children[j] as MovieClip;
 					slide.x = slide.y = 20 * slide._sourceIndex_;
 					this.setChildIndex(slide, numChildren - slide._sourceIndex_ - 1);
 				}
+				trace("*");
+				playTopSlide();
 			}
-			//playSlide(0);
 		}
 		
-		private function playSlide(index:uint):void {
-			var movie:MovieClip = getChildAt(index) as MovieClip;
-			movie.visible = true;
+		private function playTopSlide():void {
+			var movie:MovieClip = getChildAt(numChildren-1) as MovieClip;
 			movie.addEventListener(Event.ENTER_FRAME, handleBannerEnterFrame)
+			movie.visible = true;
 			movie.play(); 
 		}
 		
@@ -84,10 +85,9 @@ package {
 			var movie:MovieClip = e.target as MovieClip;
 			if(movie.currentFrame == movie.totalFrames) {
 				movie.removeEventListener(Event.ENTER_FRAME, handleBannerEnterFrame);
-				movie.visible = false;
 				movie.gotoAndStop(1);
-				setChildIndex(movie, numChildren-1)
-				playSlide(0);
+				setChildIndex(movie, 0)
+				playTopSlide();
 			}
 		}
 	}
