@@ -8,13 +8,15 @@ package {
 	 * frame long, and contain a masked movie. In which case the latter will be 
 	 * treated as the slide.
 	 * 
-	 * The 'movie' is stacked, hidden and shown, and cross faded. The 'slide' is 
-	 * stopped, rewound and played etc.
+	 * The 'movie' is loaded, stacked, hidden, shown, and cross faded.
+	 * The 'slide' is stopped, rewound and played.
 	 */
+	 
 	import flash.display.*;
 	import flash.events.*;
 	import flash.net.*;
 	import flash.utils.*;
+	
 	import mx.effects.easing.*;
 
 	[SWF (frameRate="21", backgroundColor="0x000000", pageTitle="openc.swfslideshow")]
@@ -24,11 +26,8 @@ package {
 		/**
 		 * Params
 		 */
-		
 		private var numSlides:uint;
-		
 		private const CROSSFADE_DURATION:uint = 25;
-		
 		private var resourcesDirectory:String = "resources/";
 		
 		/**
@@ -59,17 +58,19 @@ package {
 				var config:XML = new XML(event.target.data);
 				numSlides = config.movie.length();
 				var count:uint = 0;
-				for each(var movie:XML in config.movie) {
-					var src:String = this.resourcesDirectory + movie.@src;
+				for each(var movie:XML in config.movie) {				
+					
 					var loader:Loader = new Loader();
 					loader.contentLoaderInfo.addEventListener(
 						Event.COMPLETE,
-						function(sourceIndex:uint):Function {
+						function(sourceIndex:uint, href):Function {
 							return function(e:Event):void {
-								handleMovieComplete(e, sourceIndex);
+								handleMovieComplete(e, sourceIndex, href);
 							}
-						}(count++)
+						}(count++, movie.@href[0])
 					);
+					
+					var src:String = this.resourcesDirectory + movie.@src;
 					loader.load(new URLRequest(src));
 				}
 			}
@@ -81,7 +82,8 @@ package {
 		/**
 		 * Movie has loaded
 		 */
-		private function handleMovieComplete(e:Event, sourceIndex:uint):void {
+		private function handleMovieComplete(e:Event, sourceIndex:uint, href):void {
+			
 			var movie:MovieClip = e.target.content as MovieClip;
 
 			// Assume the slide is the entire movie
@@ -98,8 +100,21 @@ package {
 			// Rewind and hide
 			movie._slide_.gotoAndStop(1);
 			movie.visible = false;
+			
 			// Save reference to the order that this movie had in the XML
 			movie._sourceIndex_ = sourceIndex;
+			
+			// If a @href existed in the XML element
+			if(href) {
+				trace(movie);
+				movie._href_ = href;
+				movie.addEventListener(MouseEvent.CLICK, function(movie):Function {
+					return function() {
+						movieClickHandler(movie);
+					}
+				}(movie));
+				movie.buttonMode = true;
+			}
 			
 			this.addChild(movie);
 			
@@ -108,6 +123,21 @@ package {
 				stackMovies();
 			}
 		}
+		
+		/**
+		 * Movie was clicked
+		 */
+		private function movieClickHandler(movie:MovieClip):void {
+			
+		var request:URLRequest = new URLRequest(movie._href_);
+		try {
+			navigateToURL(request, '_self');
+		} catch (e:Error) {
+			trace(e);
+		}
+
+		}
+		
 		/**
 		 * Stack the movies in the order which they will play, first on top
 		 */
