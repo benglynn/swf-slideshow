@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
 <openc-swfslideshow>
-	<movie src="wren-banner.swf" href="http://www.bbc.co.uk/?wren-banner=a"/>
-	<movie src="banner-a.swf" href="http://www.bbc.co.uk/?banner=a"/>
-	<movie src="banner-b.swf" href="http://www.bbc.co.uk/?banner=b"/>
-	<movie src="banner-c.swf" href="http://www.bbc.co.uk/?banner=c"/>
+    <movie src="weir-doals-centre.swf" href="/projects/weir-doals-centre"/>
+    <movie src="gallows.swf" href="/projects/gallows"/>
 </openc-swfslideshow>
