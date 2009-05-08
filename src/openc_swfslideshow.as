@@ -27,8 +27,8 @@ package {
 		 * Params
 		 */
 		private var numSlides:uint;
-		private const CROSSFADE_DURATION:uint = 25;
-		private var resourcesDirectory:String = "resources/";
+		private const CROSSFADE_DURATION:uint = 25; //frames
+		private var resourcesDirectory:String = "resources";
 		
 		/**
 		 * Constructor
@@ -46,7 +46,7 @@ package {
 			var loader:URLLoader = new URLLoader();
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
 			loader.addEventListener(Event.COMPLETE, handleXMLLoadComplete);
-			loader.load(new URLRequest(this.resourcesDirectory + 'config.xml'));
+			loader.load(new URLRequest(this.resourcesDirectory + '/config.xml'));
 		}
 
 		/**
@@ -70,7 +70,7 @@ package {
 						}(count++, movie.@href[0])
 					);
 					
-					var src:String = this.resourcesDirectory + movie.@src;
+					var src:String = this.resourcesDirectory + "/" + movie.@src;
 					loader.load(new URLRequest(src));
 				}
 			}
