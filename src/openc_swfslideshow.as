@@ -57,10 +57,10 @@ package {
 
 			try {
 				var config:XML = new XML(event.target.data);
-				numSlides = config.slide.length();
+				numSlides = config.movie.length();
 				var count:uint = 0;
-				for each(var slide:XML in config.slide) {
-					var src:String = this.resourcesDirectory + slide.@src;
+				for each(var movie:XML in config.movie) {
+					var src:String = this.resourcesDirectory + movie.@src;
 					var loader:Loader = new Loader();
 					loader.contentLoaderInfo.addEventListener(
 						Event.COMPLETE,
