@@ -63,7 +63,7 @@ package {
 					var loader:Loader = new Loader();
 					loader.contentLoaderInfo.addEventListener(
 						Event.COMPLETE,
-						function(sourceIndex:uint, href):Function {
+						function(sourceIndex:uint, href:String):Function {
 							return function(e:Event):void {
 								handleMovieComplete(e, sourceIndex, href);
 							}
@@ -82,7 +82,7 @@ package {
 		/**
 		 * Movie has loaded
 		 */
-		private function handleMovieComplete(e:Event, sourceIndex:uint, href):void {
+		private function handleMovieComplete(e:Event, sourceIndex:uint, href:String):void {
 			
 			var movie:MovieClip = e.target.content as MovieClip;
 
@@ -108,8 +108,8 @@ package {
 			if(href) {
 				trace(movie);
 				movie._href_ = href;
-				movie.addEventListener(MouseEvent.CLICK, function(movie):Function {
-					return function() {
+				movie.addEventListener(MouseEvent.CLICK, function(movie:MovieClip):Function {
+					return function():void {
 						movieClickHandler(movie);
 					}
 				}(movie));
