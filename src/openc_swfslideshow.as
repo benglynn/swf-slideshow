@@ -14,6 +14,7 @@ package {
 	 
 	import flash.display.*;
 	import flash.events.*;
+	import flash.external.ExternalInterface;
 	import flash.net.*;
 	import flash.utils.*;
 	
@@ -129,12 +130,14 @@ package {
 		 */
 		private function movieClickHandler(movie:MovieClip):void {
 			
-		var request:URLRequest = new URLRequest(movie._href_);
-		try {
-			navigateToURL(request, '_self');
-		} catch (e:Error) {
-			trace(e);
-		}
+			//flash.external.ExternalInterface.call('window.location.replace', movie._href);
+
+			try {
+				navigateToURL( new URLRequest(movie._href_), "_self" );
+			}
+			catch(e:Error) {
+				trace(e.message);
+			}
 
 		}
 		
