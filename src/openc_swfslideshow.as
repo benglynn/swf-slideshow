@@ -28,7 +28,7 @@ package {
 		 * Params
 		 */
 		private var numSlides:uint;
-		private const CROSSFADE_DURATION:uint = 25; //frames
+		private var CROSSFADE_DURATION:uint = 0;
 		private var resourcesDirectory:String = "resources";
 		
 		/**
@@ -57,6 +57,12 @@ package {
 
 			try {
 				var config:XML = new XML(event.target.data);
+				
+				var crossfade = config.@crossfade[0];
+				if(crossfade) {
+					CROSSFADE_DURATION = crossfade;
+				}
+				
 				numSlides = config.movie.length();
 				var count:uint = 0;
 				for each(var movie:XML in config.movie) {				
@@ -90,9 +96,10 @@ package {
 			// Assume the slide is the entire movie
 			movie._slide_ = movie;
 			
-			// If the movie has one frame and two children, assume it contains a masked slide
-			if(movie.totalFrames == 1 && movie.numChildren == 2) {
-				movie._slide_ = movie.getChildAt(1);
+			// If the movie has one frame and no more than two children,
+			// assume it contains a masked slide
+			if(movie.totalFrames == 1 && movie.numChildren <= 2) {
+				movie._slide_ = movie.getChildAt(movie.numChildren-1);
 			}
 			
 			// Add a reference back from the slide to the movie

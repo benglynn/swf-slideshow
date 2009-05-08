@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<openc-swfslideshow>
-    <movie src="weir-doals-centre.swf" href="/projects/weir-doals-centre"/>
-    <movie src="gallows.swf" href="/projects/gallows"/>
+<openc-swfslideshow crossfade="50">
+    <movie src="philips.swf" href="/projects/weir-doals-centre"/>
+    <movie src="sap.swf" href="/projects/weir-doals-centre"/>
+    <movie src="sita.swf" href="/projects/weir-doals-centre"/>
 </openc-swfslideshow>
