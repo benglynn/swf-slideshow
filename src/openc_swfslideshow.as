@@ -66,7 +66,7 @@ package {
 						Event.COMPLETE,
 						function(sourceIndex:uint):Function {
 							return function(e:Event):void {
-								handleSlideComplete(e, sourceIndex);
+								handleMovieComplete(e, sourceIndex);
 							}
 						}(count++)
 					);
@@ -79,9 +79,9 @@ package {
 		}
 		
 		/**
-		 * Slide has loaded
+		 * Movie has loaded
 		 */
-		private function handleSlideComplete(e:Event, sourceIndex:uint):void {
+		private function handleMovieComplete(e:Event, sourceIndex:uint):void {
 			var movie:MovieClip = e.target.content as MovieClip;
 
 			// Assume the slide is the entire movie
