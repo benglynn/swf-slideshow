@@ -4,6 +4,7 @@ package {
 	import flash.events.*;
 	import flash.net.*;
 	import flash.utils.*;
+	
 	import mx.effects.easing.*;
 
 	[SWF (frameRate="21", backgroundColor="0x000000", pageTitle="openc.swfslideshow")]
@@ -16,7 +17,9 @@ package {
 		
 		private var resourcesDirectory:String = "resources/";
 		
-		// Main constuctor
+		/**
+		 * Constructor
+		 */
 		public function openc_swfslideshow() {
 			
 			if(loaderInfo.parameters.hasOwnProperty('resourcesDirectory')) {
@@ -32,6 +35,9 @@ package {
 			loader.load(new URLRequest(this.resourcesDirectory + 'config.xml'));
 		}
 
+		/**
+		 * XML has loaded
+		 */
 		private function handleXMLLoadComplete(event:Event):void {
 
 			try {
@@ -57,8 +63,22 @@ package {
 			}
 		}
 		
+		/**
+		 * Slide has loaded
+		 */
 		private function handleSlideComplete(e:Event, sourceIndex:uint, src:String):void {
 			var movie:MovieClip = e.target.content as MovieClip;
+			
+			// Set up an namespace on the movie
+			movie._swfSlideShow_ = new Object();
+			
+			// Set control methods
+			
+			
+			// If the slide has one frame and two children, assume it contains a masked movie
+			if(movie.totalFrames == 1 && movie.numChildren == 2) {
+			}
+			
 			movie.gotoAndStop(1);
 			movie.visible = false;
 			movie._sourceIndex_ = sourceIndex;
@@ -87,13 +107,20 @@ package {
 				playTopSlide();
 			}
 		}
+		
+		/**
+		 * Play top slide in stack
+		 */
 		private function playTopSlide():void {
 			var movie:MovieClip = getChildAt(numChildren-1) as MovieClip;
-			movie.addEventListener(Event.ENTER_FRAME, handleBannerEnterFrame)
+			movie.addEventListener(Event.ENTER_FRAME, handleSlideEnterFrame);
 			movie.play(); 
 		}
 		
-		private function handleBannerEnterFrame(e:Event):void {
+		/**
+		 * Slide enter frame
+		 */
+		private function handleSlideEnterFrame(e:Event):void {
 			var movie:MovieClip = e.target as MovieClip;
 			
 			// If reveal should begin
@@ -106,7 +133,7 @@ package {
 			
 			// If this is the last frame
 			if(movie.currentFrame == movie.totalFrames) {
-				movie.removeEventListener(Event.ENTER_FRAME, handleBannerEnterFrame);
+				movie.removeEventListener(Event.ENTER_FRAME, handleSlideEnterFrame);
 				movie.gotoAndStop(1);
 				setChildIndex(movie, 0);
 				movie.alpha = 1;
