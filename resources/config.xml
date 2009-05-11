@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
-<openc-swfslideshow crossfade="50">
-    <movie src="philips.swf" href="/projects/weir-doals-centre"/>
-    <movie src="sap.swf" href="/projects/weir-doals-centre"/>
-    <movie src="sita.swf" href="/projects/weir-doals-centre"/>
+<openc-swfslideshow crossfade="40" order="random">
+    <movie src="specialized.swf" href="/work/case-studies/specialized-retail-services-programme"/>
+    <movie src="sweetbird.swf" href="/work/projects/sweetbird-web-development"/>
+    <movie src="wren.swf" href="/work/projects/wren-digital-strategy"/>
+    <movie src="philips.swf" href="/work/projects/philips-live-earth-internal-communications"/>
+    <movie src="sap.swf" href="/work/case-studies/sap-global-sponsorship-programme"/>
+    <movie src="sita.swf" href="/work/projects/sita-uk-online-communications"/>
 </openc-swfslideshow>

@@ -14,7 +14,6 @@ package {
 	 
 	import flash.display.*;
 	import flash.events.*;
-	import flash.external.ExternalInterface;
 	import flash.net.*;
 	import flash.utils.*;
 	
@@ -29,6 +28,8 @@ package {
 		 */
 		private var numSlides:uint;
 		private var CROSSFADE_DURATION:uint = 0;
+		// Order to display slides in, may be 'source' (XML source order) or 'random'
+		private var ORDER:String = "source";
 		private var resourcesDirectory:String = "resources";
 		
 		/**
@@ -58,9 +59,16 @@ package {
 			try {
 				var config:XML = new XML(event.target.data);
 				
-				var crossfade = config.@crossfade[0];
+				// Look for crossfade configuration
+				var crossfade:String = config.@crossfade[0];
 				if(crossfade) {
-					CROSSFADE_DURATION = crossfade;
+					CROSSFADE_DURATION = parseInt(crossfade);
+				}
+				
+				// Look for order configuration
+				var order:String = config.@order[0];
+				if(order) {
+					ORDER = order;
 				}
 				
 				numSlides = config.movie.length();
@@ -97,7 +105,7 @@ package {
 			movie._slide_ = movie;
 			
 			// If the movie has one frame and no more than two children,
-			// assume it contains a masked slide
+			// assume it contains a (posibly masked) slide movie
 			if(movie.totalFrames == 1 && movie.numChildren <= 2) {
 				movie._slide_ = movie.getChildAt(movie.numChildren-1);
 			}
@@ -114,7 +122,6 @@ package {
 			
 			// If a @href existed in the XML element
 			if(href) {
-				trace(movie);
 				movie._href_ = href;
 				movie.addEventListener(MouseEvent.CLICK, function(movie:MovieClip):Function {
 					return function():void {
@@ -129,6 +136,13 @@ package {
 			// If all the slides have loaded, stack in order
 			if(numChildren == numSlides) {
 				stackMovies();
+				
+				// Show all
+				for(var i:uint = 0 ; i < numChildren ; i++) {
+					getChildAt(i).visible = true;
+				}
+				// Kick off
+				playTopSlide();
 			}
 		}
 		
@@ -151,25 +165,29 @@ package {
 		/**
 		 * Stack the movies in the order which they will play, first on top
 		 */
-		private function stackMovies():void {
+		private function stackMovies():void {			
 			
-			// Create a children array as will itterate while mixing up stack
+			// Create an array representing child movies
 			var children:Array = new Array(numChildren);
 			for(var i:uint = 0 ; i < numChildren ; i++) {
 				children[i] = this.getChildAt(i);
 			}
-			// Stack as determined by XML source order
+			if(ORDER == "random") {
+				trace("Sorting at random");
+				children.sort(function():Number {
+					return Math.round(Math.random()*2)-1;
+				});
+			}
+			else if(ORDER == "source") {
+				children.sort(function(a:MovieClip, b:MovieClip):Number {
+					return a._sourceIndex_ > b._sourceIndex_  ? -1 : 1;
+				});
+			}
+			// Stack each child according to its sorted index
 			for(i = 0 ; i < numChildren ; i++) {
 				var movie:MovieClip = children[i] as MovieClip;
-				//movie.x = movie.y = 20 * movie._sourceIndex_;
-				this.setChildIndex(movie, numChildren - movie._sourceIndex_ - 1);
+				setChildIndex(movie, i);
 			}
-			// Show all
-			for(i = 0 ; i < numChildren ; i++) {
-				getChildAt(i).visible = true;
-			}
-			// Kick off
-			playTopSlide();
 		}
 		
 		/**
