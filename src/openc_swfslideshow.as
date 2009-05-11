@@ -14,6 +14,7 @@ package {
 	 
 	import flash.display.*;
 	import flash.events.*;
+	import flash.geom.ColorTransform;
 	import flash.net.*;
 	import flash.utils.*;
 	
@@ -23,23 +24,26 @@ package {
 	
 	public class openc_swfslideshow extends Sprite {
 		
-		/**
-		 * Params
-		 */
 		private var numSlides:uint;
-		private var CROSSFADE_DURATION:uint = 0;
-		// Order to display slides in, may be 'source' (XML source order) or 'random'
-		private var ORDER:String = "source";
-		private var resourcesDirectory:String = "resources";
+		 
+		private var BURN:Boolean = true;
+		private var RESOURCES_DIRECTORY:String = "resources";
+		
+		private var config:Object = new Object;;
 		
 		/**
 		 * Constructor
 		 */
 		public function openc_swfslideshow() {
 			
+			// Set default configuration values
+			config.fade_out = 0;
+			config.burn_out = 0;
+			config.order = "source";
+			
 			// Allow the resource directory to be overriden by a q/s param
 			if(loaderInfo.parameters.hasOwnProperty('resourcesDirectory')) {
-				resourcesDirectory = loaderInfo.parameters['resourcesDirectory'];
+				RESOURCES_DIRECTORY = loaderInfo.parameters['resourcesDirectory'];
 			}
 			
 			stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -48,7 +52,7 @@ package {
 			var loader:URLLoader = new URLLoader();
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
 			loader.addEventListener(Event.COMPLETE, handleXMLLoadComplete);
-			loader.load(new URLRequest(this.resourcesDirectory + '/config.xml'));
+			loader.load(new URLRequest(this.RESOURCES_DIRECTORY + '/config.xml'));
 		}
 
 		/**
@@ -57,23 +61,33 @@ package {
 		private function handleXMLLoadComplete(event:Event):void {
 
 			try {
-				var config:XML = new XML(event.target.data);
+				var XMLConfig:XML = new XML(event.target.data);
 				
-				// Look for crossfade configuration
-				var crossfade:String = config.@crossfade[0];
-				if(crossfade) {
-					CROSSFADE_DURATION = parseInt(crossfade);
+				// Look for XML equivalents of config properties in the root node of the XML
+				for(var configName:String in config) {
+					var XMLName:String = configName.replace('_', '-');
+					var XMLValue:String = XMLConfig.attribute(XMLName)[0];
+					if(XMLValue) {
+						switch(typeof config[configName]){
+							case "number":
+								config[configName] = parseInt(XMLValue);
+								break;
+							case "string":
+								config[configName] = XMLValue;
+								break
+						}
+					}
 				}
 				
-				// Look for order configuration
-				var order:String = config.@order[0];
-				if(order) {
-					ORDER = order;
+				// Look for burn configuration
+				var burn:String = XMLConfig.@burn[0];
+				if(burn == "yes") {
+					BURN = true;
 				}
 				
-				numSlides = config.movie.length();
+				numSlides = XMLConfig.movie.length();
 				var count:uint = 0;
-				for each(var movie:XML in config.movie) {				
+				for each(var movie:XML in XMLConfig.movie) {				
 					
 					var loader:Loader = new Loader();
 					loader.contentLoaderInfo.addEventListener(
@@ -85,7 +99,7 @@ package {
 						}(count++, movie.@href[0])
 					);
 					
-					var src:String = this.resourcesDirectory + "/" + movie.@src;
+					var src:String = this.RESOURCES_DIRECTORY + "/" + movie.@src;
 					loader.load(new URLRequest(src));
 				}
 			}
@@ -150,8 +164,6 @@ package {
 		 * Movie was clicked
 		 */
 		private function movieClickHandler(movie:MovieClip):void {
-			
-			//flash.external.ExternalInterface.call('window.location.replace', movie._href);
 
 			try {
 				navigateToURL( new URLRequest(movie._href_), "_self" );
@@ -165,24 +177,28 @@ package {
 		/**
 		 * Stack the movies in the order which they will play, first on top
 		 */
-		private function stackMovies():void {			
+		private function stackMovies():void {	
 			
 			// Create an array representing child movies
 			var children:Array = new Array(numChildren);
 			for(var i:uint = 0 ; i < numChildren ; i++) {
 				children[i] = this.getChildAt(i);
 			}
-			if(ORDER == "random") {
-				trace("Sorting at random");
+			switch(config.order) {
+				
+			 case "random":
 				children.sort(function():Number {
-					return Math.round(Math.random()*2)-1;
+					return Math.random() > 0.5 ? 1 : -1;
 				});
-			}
-			else if(ORDER == "source") {
+				break;
+			
+			case "source":
 				children.sort(function(a:MovieClip, b:MovieClip):Number {
 					return a._sourceIndex_ > b._sourceIndex_  ? -1 : 1;
 				});
+				break;
 			}
+			
 			// Stack each child according to its sorted index
 			for(i = 0 ; i < numChildren ; i++) {
 				var movie:MovieClip = children[i] as MovieClip;
@@ -205,12 +221,21 @@ package {
 		private function handleSlideEnterFrame(e:Event):void {
 			var slide:MovieClip = e.target as MovieClip;
 			
-			// If reveal should begin
-			if(slide.currentFrame > slide.totalFrames - CROSSFADE_DURATION) {
-				var time:Number = CROSSFADE_DURATION - (slide.totalFrames - slide.currentFrame);
+			// Fade out if into crossfade time
+			if(slide.currentFrame > slide.totalFrames - config.fade_out) {
+				var time:Number = config.fade_out - (slide.totalFrames - slide.currentFrame);
 				var initialValue:Number = 1;
 				var totalChange:Number = -1;
-				slide.alpha = Exponential.easeIn(time, initialValue, totalChange, CROSSFADE_DURATION);
+				slide.alpha = Exponential.easeIn(time, initialValue, totalChange, config.fade_out);
+			}
+			
+			if(slide.currentFrame > slide.totalFrames - config.burn_out) {
+				time = config.burn_out - (slide.totalFrames - slide.currentFrame);
+				var initialBrightness:Number = 0;
+				var finalBrightness:Number = 255;
+				var colour:ColorTransform = new ColorTransform;
+				colour.redOffset = colour.greenOffset = colour.blueOffset = Exponential.easeIn(time, initialBrightness, finalBrightness, config.burn_out);
+				slide.transform.colorTransform = colour;
 			}
 			
 			// If this is the last frame
@@ -219,6 +244,9 @@ package {
 				slide.gotoAndStop(1);
 				setChildIndex(slide._movie_, 0);
 				slide.alpha = 1;
+				var colourReset:ColorTransform = new ColorTransform;
+				colourReset.redOffset = colourReset.greenOffset = colourReset.blueOffset = 0;
+				slide.transform.colorTransform = colourReset; 
 				playTopSlide();
 			}
 		}
