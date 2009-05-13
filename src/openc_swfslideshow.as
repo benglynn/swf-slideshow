@@ -39,6 +39,8 @@ package {
 			// Set default configuration values
 			config.fade_out = 0;
 			config.burn_out = 0;
+			config.burn_in = 0;
+			config.fade_in = 0;
 			config.order = "source";
 			
 			// Allow the resource directory to be overriden by a q/s param
@@ -129,7 +131,7 @@ package {
 			
 			// Rewind and hide
 			movie._slide_.gotoAndStop(1);
-			movie.visible = false;
+			movie._slide_.visible = false;
 			
 			// Save reference to the order that this movie had in the XML
 			movie._sourceIndex_ = sourceIndex;
@@ -152,9 +154,11 @@ package {
 				stackMovies();
 				
 				// Show all
+				/*
 				for(var i:uint = 0 ; i < numChildren ; i++) {
 					getChildAt(i).visible = true;
 				}
+				*/
 				// Kick off
 				playTopSlide();
 			}
@@ -220,33 +224,57 @@ package {
 		 */
 		private function handleSlideEnterFrame(e:Event):void {
 			var slide:MovieClip = e.target as MovieClip;
-			
-			// Fade out if into crossfade time
+			var colour:ColorTransform = new ColorTransform;
+
+			 // Alpha fading; fade out takes precedence over fade in if there's an overlap
+			var elapsedAlphaTime:uint;
+			var initialAlpha:Number = 0;
+			var alphaChange:Number = 0;
+						
+			// If into fade out time
 			if(slide.currentFrame > slide.totalFrames - config.fade_out) {
-				var time:Number = config.fade_out - (slide.totalFrames - slide.currentFrame);
-				var initialValue:Number = 1;
-				var totalChange:Number = -1;
-				slide.alpha = Exponential.easeIn(time, initialValue, totalChange, config.fade_out);
+				elapsedAlphaTime = config.fade_out - (slide.totalFrames - slide.currentFrame);
+				alphaChange = -255;
+				colour.alphaOffset = Exponential.easeIn(elapsedAlphaTime, initialAlpha, alphaChange, config.fade_out);
+			} 
+			
+			// Else if into fade in time
+			else if (slide.currentFrame < config.fade_in) {
+				elapsedAlphaTime = slide.currentFrame;
+				initialAlpha = -255;
+				alphaChange = 255;
+				colour.alphaOffset = Exponential.easeOut(elapsedAlphaTime, initialAlpha, alphaChange, config.fade_in);
+			}
+
+			 // Brightness fading; fade out takes precedence over fade in if there's an overlap
+			var elapsedBrightnessTime:uint;
+			var initialBrightness:Number = 0;
+			var brightnessChange:Number = 0;
+						
+			// If into burn out time
+			if(slide.currentFrame > slide.totalFrames - config.burn_out) {
+				elapsedBrightnessTime = config.burn_out - (slide.totalFrames - slide.currentFrame);
+				brightnessChange = 255;
+				colour.redOffset = colour.greenOffset = colour.blueOffset = Exponential.easeIn(elapsedBrightnessTime, initialBrightness, brightnessChange, config.burn_out);
+			} 
+			
+			// Else if into burn in time
+			else if (slide.currentFrame < config.burn_in) {
+				elapsedBrightnessTime = slide.currentFrame;
+				initialBrightness = 255;
+				brightnessChange = -255;
+				colour.redOffset = colour.greenOffset = colour.blueOffset = Exponential.easeOut(elapsedBrightnessTime, initialBrightness, brightnessChange, config.burn_in);
 			}
 			
-			if(slide.currentFrame > slide.totalFrames - config.burn_out) {
-				time = config.burn_out - (slide.totalFrames - slide.currentFrame);
-				var initialBrightness:Number = 0;
-				var finalBrightness:Number = 255;
-				var colour:ColorTransform = new ColorTransform;
-				colour.redOffset = colour.greenOffset = colour.blueOffset = Exponential.easeIn(time, initialBrightness, finalBrightness, config.burn_out);
-				slide.transform.colorTransform = colour;
-			}
+			// Apply the colour transformation
+			slide.transform.colorTransform = colour;
+			slide.visible = true;
 			
 			// If this is the last frame
 			if(slide.currentFrame == slide.totalFrames) {
 				slide.removeEventListener(Event.ENTER_FRAME, handleSlideEnterFrame);
 				slide.gotoAndStop(1);
 				setChildIndex(slide._movie_, 0);
-				slide.alpha = 1;
-				var colourReset:ColorTransform = new ColorTransform;
-				colourReset.redOffset = colourReset.greenOffset = colourReset.blueOffset = 0;
-				slide.transform.colorTransform = colourReset; 
 				playTopSlide();
 			}
 		}
