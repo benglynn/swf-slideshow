@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<config fade-in="50" fade-out="50" burn-in="70" burn-out="70" order="random">
+<config alpha-fade-in="0" alpha-fade-out="0" brightness-fade-in="50" brightness-fade-out="50" brightness-offset="255" order="random">
     <movie src="wren.swf" href="/work/projects/wren-digital-strategy"/>
     <movie src="philips.swf" href="/work/projects/philips-live-earth-internal-communications"/>
     <movie src="sap.swf" href="/work/case-studies/sap-global-sponsorship-programme"/>
