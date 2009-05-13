@@ -24,7 +24,7 @@ package {
 	public class openc_swfslideshow extends Sprite {
 		
 		private var numSlides:uint;
-		private var RESOURCES_DIRECTORY:String = "resources";
+		private var RESOURCES_DIRECTORY:String = "resources-opensite";
 		
 		private var config:Object = new Object;;
 		
