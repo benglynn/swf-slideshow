@@ -209,6 +209,13 @@ package {
 		 */
 		private function handleSlideEnterFrame(e:Event):void {
 			var slide:MovieClip = e.target as MovieClip;
+			
+			// If this slide has not fully loaded
+			if(slide.framesLoaded != slide.totalFrames) {
+				slide.gotoAndPlay(1);
+				return;
+			}
+			
 			var colour:ColorTransform = new ColorTransform;
 
 			 // Alpha fading; fade out takes precedence over fade in if their total exceeds totalframes
