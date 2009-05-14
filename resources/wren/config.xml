@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<openc-swfslideshow>
+
+<config alpha-fade-in="50" alpha-fade-out="50" brightness-fade-in="0" brightness-fade-out="0" brightness-offset="0" order="random">
 	<movie src="wigg-island.swf" href="/projects/"/>
 	<movie src="wyndham-play-park.swf" href="/projects/"/>
 	<movie src="priory-country-park-labyrinth.swf" href="/projects/"/>
@@ -9,5 +10,4 @@
 	<movie src="thorpe-hesley.swf" href="/projects/"/>
 	<movie src="tipkinder-bmx-park.swf" href="/projects/"/>
 	<movie src="weir-doals-centre.swf" href="/projects/"/>
-	
-</openc-swfslideshow>
+</config>

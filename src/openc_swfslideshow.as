@@ -19,14 +19,14 @@ package {
 	
 	import mx.effects.easing.*;
 
-	[SWF (frameRate="21", backgroundColor="0x000000", pageTitle="openc.swfslideshow")]
+	[SWF (frameRate="21", backgroundColor="0xffffff", pageTitle="openc.swfslideshow")]
 	
 	public class openc_swfslideshow extends Sprite {
 		
 		private var numSlides:uint;
-		private var RESOURCES_DIRECTORY:String = "resources-opensite";
+		private var RESOURCES_DIRECTORY:String = "resources/wren";
 		
-		private var config:Object = new Object;;
+		private var config:Object = new Object;
 		
 		/**
 		 * Constructor
@@ -34,12 +34,7 @@ package {
 		public function openc_swfslideshow() {
 			
 			// Set default configuration values
-			config.alpha_fade_out = 0;
-			config.brightness_fade_out = 0;
-			config.alpha_fade_in = 0;
-			config.brightness_fade_in = 0;
-			config.brightness_offset = 0;
-			config.order = "source";
+			initialiseConfig();
 			
 			// Allow the resource directory to be overriden by a q/s param
 			if(loaderInfo.parameters.hasOwnProperty('resourcesDirectory')) {
@@ -54,6 +49,19 @@ package {
 			loader.addEventListener(Event.COMPLETE, handleXMLLoadComplete);
 			loader.load(new URLRequest(this.RESOURCES_DIRECTORY + '/config.xml'));
 		}
+		
+		/**
+		 * Set default configuration options
+		 * Strangely, this is more safely done in a different stack frame to that which loads the XML
+		 */
+		 private function initialiseConfig():void {
+			config.alpha_fade_in = 0;
+		 	config.alpha_fade_out = 0;
+			config.brightness_fade_in = 0;
+			config.brightness_fade_out = 0;
+			config.brightness_offset = 0;
+			config.order = "source";
+		 }
 
 		/**
 		 * Configuration has loaded
@@ -63,8 +71,14 @@ package {
 			try {
 				var XMLConfig:XML = new XML(event.target.data);
 				
+				//trace(XMLConfig.attribute('alpha-fade-in')[0]);
+				
 				// Look for XML equivalents of config properties in the root node of the XML
 				for(var configName:String in config) {
+					
+					trace(configName);
+					
+					
 					var XMLName:String = configName.replace(/_/g, '-');
 					var XMLValue:String = XMLConfig.attribute(XMLName)[0];
 					if(XMLValue) {
