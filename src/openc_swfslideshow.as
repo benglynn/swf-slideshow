@@ -16,6 +16,7 @@ package {
 	import flash.geom.ColorTransform;
 	import flash.net.*;
 	import flash.utils.*;
+	
 	import mx.effects.easing.*;
 
 	[SWF (frameRate="21", backgroundColor="0xffffff", pageTitle="openc.swfslideshow")]
@@ -23,7 +24,7 @@ package {
 	public class openc_swfslideshow extends Sprite {
 		
 		private var numSlides:uint;
-		private var RESOURCES_DIRECTORY:String = "resources/opensite";
+		private var RESOURCES_DIRECTORY:String = "../resources/opensite";
 		
 		private var config:Object = new Object;
 		
