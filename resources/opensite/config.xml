@@ -1,9 +1,10 @@
 <?xml version="1.0"?>
-<config alpha-fade-in="0" alpha-fade-out="0" brightness-fade-in="50" brightness-fade-out="50" brightness-offset="255" order="random">
-    <movie src="wren.swf" href="/work/projects/wren-digital-strategy"/>
+<config alpha-fade-in="20" alpha-fade-out="20" brightness-fade-in="60" brightness-fade-out="60" brightness-offset="80" order="random">
+    <movie src="wren.swf" href="/work/case-studies/wren"/>
     <movie src="philips.swf" href="/work/projects/philips-live-earth-internal-communications"/>
-    <movie src="sap.swf" href="/work/case-studies/sap-global-sponsorship-programme"/>
-    <movie src="sita.swf" href="/work/projects/sita-uk-online-communications"/>
-    <movie src="specialized.swf" href="/work/case-studies/specialized-retail-services-programme"/>
+    <movie src="sap.swf" href="/work/case-studies/sap"/>
+    <movie src="sita.swf" href="/work/case-studies/sita"/>
+    <movie src="specialized.swf" href="/work/case-studies/specialized"/>
     <movie src="sweetbird.swf" href="/work/projects/sweetbird-web-development"/>
+    <movie src="unilever.swf" href="/work/case-studies/unilever-house-of-comfort"/>
 </config>

@@ -1,6 +1,13 @@
 <?xml version="1.0"?>
 
-<config alpha-fade-in="50" alpha-fade-out="50" brightness-fade-in="0" brightness-fade-out="0" brightness-offset="0" order="random">
+<config
+	alpha-fade-in="10" 
+	alpha-fade-out="30" 
+	brightness-fade-in="0" 
+	brightness-fade-out="0" 
+	brightness-offset="0"
+	overlap="10"
+	order="source">
 	<movie src="wigg-island.swf" href="/projects/"/>
 	<movie src="wyndham-play-park.swf" href="/projects/"/>
 	<movie src="priory-country-park-labyrinth.swf" href="/projects/"/>

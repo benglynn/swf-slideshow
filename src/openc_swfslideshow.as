@@ -16,7 +16,6 @@ package {
 	import flash.geom.ColorTransform;
 	import flash.net.*;
 	import flash.utils.*;
-	
 	import mx.effects.easing.*;
 
 	[SWF (frameRate="21", backgroundColor="0xffffff", pageTitle="openc.swfslideshow")]
@@ -24,7 +23,7 @@ package {
 	public class openc_swfslideshow extends Sprite {
 		
 		private var numSlides:uint;
-		private var RESOURCES_DIRECTORY:String = "resources/wren";
+		private var RESOURCES_DIRECTORY:String = "resources/opensite";
 		
 		private var config:Object = new Object;
 		
@@ -54,30 +53,26 @@ package {
 		 * Set default configuration options
 		 * Strangely, this is more safely done in a different stack frame to that which loads the XML
 		 */
-		 private function initialiseConfig():void {
+		 protected function initialiseConfig():void {
 			config.alpha_fade_in = 0;
 		 	config.alpha_fade_out = 0;
 			config.brightness_fade_in = 0;
 			config.brightness_fade_out = 0;
 			config.brightness_offset = 0;
 			config.order = "source";
+			config.overlap = 0;
 		 }
 
 		/**
 		 * Configuration has loaded
 		 */
-		private function handleXMLLoadComplete(event:Event):void {
+		protected function handleXMLLoadComplete(event:Event):void {
 
 			try {
 				var XMLConfig:XML = new XML(event.target.data);
 				
-				//trace(XMLConfig.attribute('alpha-fade-in')[0]);
-				
 				// Look for XML equivalents of config properties in the root node of the XML
-				for(var configName:String in config) {
-					
-					trace(configName);
-					
+				for(var configName:String in config) {					
 					
 					var XMLName:String = configName.replace(/_/g, '-');
 					var XMLValue:String = XMLConfig.attribute(XMLName)[0];
@@ -120,7 +115,7 @@ package {
 		/**
 		 * Movie has loaded
 		 */
-		private function handleMovieComplete(e:Event, sourceIndex:uint, href:String):void {
+		protected function handleMovieComplete(e:Event, sourceIndex:uint, href:String):void {
 			
 			var movie:MovieClip = e.target.content as MovieClip;
 
@@ -159,14 +154,14 @@ package {
 			// If all the slides have loaded, stack in order and play
 			if(numChildren == numSlides) {
 				stackMovies();
-				playTopSlide();
+				playSlideAt(numChildren-1);
 			}
 		}
 		
 		/**
 		 * Movie was clicked
 		 */
-		private function movieClickHandler(movie:MovieClip):void {
+		protected function movieClickHandler(movie:MovieClip):void {
 
 			try {
 				navigateToURL( new URLRequest(movie._href_), "_self" );
@@ -180,7 +175,7 @@ package {
 		/**
 		 * Stack the movies in the order which they will play, first on top
 		 */
-		private function stackMovies():void {	
+		protected function stackMovies():void {	
 			
 			// Create an array representing child movies
 			var children:Array = new Array(numChildren);
@@ -206,14 +201,16 @@ package {
 			for(i = 0 ; i < numChildren ; i++) {
 				var movie:MovieClip = children[i] as MovieClip;
 				setChildIndex(movie, i);
+				trace("Stacking", i);
+				movie.left = movie.top = i * 10;
 			}
 		}
 		
 		/**
 		 * Play top slide in stack
 		 */
-		private function playTopSlide():void {
-			var movie:MovieClip = getChildAt(numChildren-1) as MovieClip;
+		protected function playSlideAt(index:uint):void {
+			var movie:MovieClip = getChildAt(index) as MovieClip;
 			movie._slide_.addEventListener(Event.ENTER_FRAME, handleSlideEnterFrame);
 			movie._slide_.play(); 
 		}
@@ -221,7 +218,7 @@ package {
 		/**
 		 * Slide enter frame
 		 */
-		private function handleSlideEnterFrame(e:Event):void {
+		protected function handleSlideEnterFrame(e:Event):void {
 			var slide:MovieClip = e.target as MovieClip;
 			
 			// If this slide has not fully loaded
@@ -232,7 +229,7 @@ package {
 			
 			var colour:ColorTransform = new ColorTransform;
 
-			 // Alpha fading; fade out takes precedence over fade in if their total exceeds totalframes
+			 // Alpha fading; fade out takes precedence over fade in if there's an overlap
 			var elapsedAlphaTime:uint;
 			var initialAlpha:Number = 0;
 			var alphaChange:Number = 0;
@@ -257,14 +254,14 @@ package {
 			var initialBrightness:Number = 0;
 			var brightnessChange:Number = 0;
 						
-			// If into burn out time
+			// If into brightness fade out time
 			if(slide.currentFrame > slide.totalFrames - config.brightness_fade_out) {
 				elapsedBrightnessTime = config.brightness_fade_out - (slide.totalFrames - slide.currentFrame);
 				brightnessChange = config.brightness_offset;
 				colour.redOffset = colour.greenOffset = colour.blueOffset = Exponential.easeIn(elapsedBrightnessTime, initialBrightness, brightnessChange, config.brightness_fade_out);
 			} 
 			
-			// Else if into burn in time
+			// Else if into brightness fade in time
 			else if (slide.currentFrame < config.brightness_fade_in) {
 				elapsedBrightnessTime = slide.currentFrame;
 				initialBrightness = config.brightness_offset;
@@ -281,7 +278,15 @@ package {
 				slide.removeEventListener(Event.ENTER_FRAME, handleSlideEnterFrame);
 				slide.gotoAndStop(1);
 				setChildIndex(slide._movie_, 0);
-				playTopSlide();
+				// If there is no overlap, now's the time to play the next slide
+				if(config.overlap == 0) {
+					playSlideAt(numChildren-1);
+				}
+			}
+			
+			// If there is an overlap, and that many frames remain
+			if(slide.currentFrame == slide.totalFrames - config.overlap) {
+				playSlideAt(numChildren-2);
 			}
 		}
 	}
