@@ -16,22 +16,45 @@ package {
 	import flash.geom.ColorTransform;
 	import flash.net.*;
 	import flash.utils.*;
-	
 	import mx.effects.easing.*;
 
 	[SWF (frameRate="21", backgroundColor="0xffffff", pageTitle="openc.swfslideshow")]
 	
+	/**
+	 * This movie parses a config file and plays through a series of swf movies
+	 * (called slides)` with configurable alpha and brightness transitions 
+	 * between each one.
+	 */
 	public class openc_swfslideshow extends Sprite {
 		
-		private var numSlides:uint;
-		private var RESOURCES_DIRECTORY:String = "../resources/opensite";
-		
-		private var config:Object = new Object;
+		/**
+		 * The number of slides
+		 */
+		protected var numSlides:uint;
 		
 		/**
-		 * Constructor
+		 * The directory from which to load config.xml
+		 */
+		protected var RESOURCES_DIRECTORY:String = "../resources/opensite";
+		
+		/**
+		 * A store for configuration after parsing conifg.xml
+		 */
+		protected var config:Object = new Object;
+		
+		/**
+		 * Constructor. Sets stage scale mode. Sets default configuration 
+		 * values. Looks for a query-string parameter 'resourcesDirectory', if 
+		 * present, overrides RESOURCES_DIRECTORY. Loads config.xml and sets 
+		 * handler
+		 * 
+		 * @see #initialiseConfig()
+		 * @see #handleXMLLoadComplete()
 		 */
 		public function openc_swfslideshow() {
+			
+			stage.scaleMode = StageScaleMode.NO_SCALE;
+			stage.align = StageAlign.TOP_LEFT;
 			
 			// Set default configuration values
 			initialiseConfig();
@@ -41,9 +64,7 @@ package {
 				RESOURCES_DIRECTORY = loaderInfo.parameters['resourcesDirectory'];
 			}
 			
-			stage.scaleMode = StageScaleMode.NO_SCALE;
-			stage.align = StageAlign.TOP_LEFT;
-			
+			// Load config and set handler
 			var loader:URLLoader = new URLLoader();
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
 			loader.addEventListener(Event.COMPLETE, handleXMLLoadComplete);
@@ -51,8 +72,8 @@ package {
 		}
 		
 		/**
-		 * Set default configuration options
-		 * Strangely, this is more safely done in a different stack frame to that which loads the XML
+		 * Sets default configuration options. Strangely, this needs to be in a
+		 *  different frame to that which loads the XML
 		 */
 		 protected function initialiseConfig():void {
 			config.alpha_fade_in = 0;
@@ -65,7 +86,10 @@ package {
 		 }
 
 		/**
-		 * Configuration has loaded
+		 * Config has loaded. Override any specified configuration. Load slides
+		 * and set handlers.
+		 * 
+		 * @param event Event.COMPLETE fired when config.xml loads
 		 */
 		protected function handleXMLLoadComplete(event:Event):void {
 
@@ -89,11 +113,10 @@ package {
 					}
 				}
 				
-				
+				// Load each slide defined in config
 				numSlides = XMLConfig.movie.length();
 				var count:uint = 0;
-				for each(var movie:XML in XMLConfig.movie) {				
-					
+				for each(var movie:XML in XMLConfig.movie) {
 					var loader:Loader = new Loader();
 					loader.contentLoaderInfo.addEventListener(
 						Event.COMPLETE,
@@ -103,18 +126,19 @@ package {
 							}
 						}(count++, movie.@href[0])
 					);
-					
 					var src:String = this.RESOURCES_DIRECTORY + "/" + movie.@src;
 					loader.load(new URLRequest(src));
 				}
 			}
-			catch(e:TypeError) {
+			catch(e:Error) {
 				trace(e.message);
 			}
 		}
 		
 		/**
-		 * Movie has loaded
+		 * A slide's movie has loaded. Examine to determine if this is a masked
+		 * movie, and if so, target the mask movie for all measurements, 
+		 * stopping and rewinding etc. 
 		 */
 		protected function handleMovieComplete(e:Event, sourceIndex:uint, href:String):void {
 			
@@ -208,7 +232,9 @@ package {
 		}
 		
 		/**
-		 * Play top slide in stack
+		 * Start a slide playing and attach enterFrame handler.
+		 * 
+		 * @see #handleSlideEnterFrame()
 		 */
 		protected function playSlideAt(index:uint):void {
 			var movie:MovieClip = getChildAt(index) as MovieClip;
@@ -217,7 +243,11 @@ package {
 		}
 		
 		/**
-		 * Slide enter frame
+		 * Slide enter frame handler. Rewind if this slide has not fully loaded.
+		 * Fade alpha or brightness if config says it should be fading. Play the
+		 * next slide down in the stack when either this slide has finished, or
+		 * the next is configured to play with an overlap. Remove handler when
+		 * stopped.
 		 */
 		protected function handleSlideEnterFrame(e:Event):void {
 			var slide:MovieClip = e.target as MovieClip;
@@ -230,7 +260,8 @@ package {
 			
 			var colour:ColorTransform = new ColorTransform;
 
-			 // Alpha fading; fade out takes precedence over fade in if there's an overlap
+			 // Alpha fading; fade out takes precedence over fade in if there's 
+			 // an overlap
 			var elapsedAlphaTime:uint;
 			var initialAlpha:Number = 0;
 			var alphaChange:Number = 0;
@@ -250,7 +281,8 @@ package {
 				colour.alphaOffset = Exponential.easeOut(elapsedAlphaTime, initialAlpha, alphaChange, config.alpha_fade_in);
 			}
 
-			 // Brightness fading; fade out takes precedence over fade in if there's an overlap
+			 // Brightness fading; fade out takes precedence over fade in if 
+			 // there's an overlap
 			var elapsedBrightnessTime:uint;
 			var initialBrightness:Number = 0;
 			var brightnessChange:Number = 0;
