@@ -1,36 +1,54 @@
 package {
 	
-	/**
-	 * In this application 'movie' refers to the SWF loaded in, 'slide' refers to the animation
-	 * 
-	 * These two *may* be the same thing, but a movie may otherwsie be just one 
-	 * frame long, and contain a masked movie. In which case the latter will be 
-	 * treated as the slide.
-	 * 
-	 * The 'movie' is loaded, stacked, hidden, shown, and faded.
-	 * The 'slide' is stopped, rewound and played.
-	 */
+	
 	 
 	import flash.display.*;
 	import flash.events.*;
 	import flash.geom.ColorTransform;
 	import flash.net.*;
 	import flash.utils.*;
+	
+	import mx.core.MovieClipLoaderAsset;
 	import mx.effects.easing.*;
 
-	[SWF (frameRate="21", backgroundColor="0xffffff", pageTitle="openc.swfslideshow")]
+	/**
+	 * Resulting swf has a frame rate of 21, this will override framerates of
+	 * individual slides. Width and height also set to match example swfs though 
+	 * these will be overriden when movie embedded in web page
+	 */
+	[SWF (frameRate="21", backgroundColor="0xffffff", pageTitle="openc.swfslideshow", width=730, height=410)]
 	
 	/**
 	 * This movie parses a config file and plays through a series of swf movies
-	 * (called slides)` with configurable alpha and brightness transitions 
-	 * between each one.
+	 * with configurable alpha and brightness transitions between each one.
 	 */
 	public class openc_swfslideshow extends Sprite {
 		
 		/**
-		 * The number of slides
+		 * Initial delay before loading first movie
 		 */
-		protected var numSlides:uint;
+		 private const INITIAL_DELAY:uint = 300;
+		
+		/**
+		 * Loading animation raw emed
+		 */
+		 [Embed(source="../swf/loading.swf")]
+		 protected var loadingAnimationRaw:Class;
+		 
+		 /**
+		 * Loading nimation
+		 */
+		 protected var loadingAnimation:MovieClipLoaderAsset;		 
+		 
+		 /**
+		 * Movies container
+		 */
+		 protected var movies:DisplayObjectContainer;
+		 
+		 /**
+		 * Movies array, hold movie XML elements from config in play order
+		 */
+		 protected var movieConfigs:Array = new Array();
 		
 		/**
 		 * The directory from which to load config.xml
@@ -64,6 +82,16 @@ package {
 				RESOURCES_DIRECTORY = loaderInfo.parameters['resourcesDirectory'];
 			}
 			
+			// Container for slides
+			movies = new MovieClip();
+			addChild(movies);
+			
+			// Position and display loading animation
+			loadingAnimation = new loadingAnimationRaw();
+			this.loadingAnimation.x = this.stage.stageWidth/2 - this.loadingAnimation.width/2
+			this.loadingAnimation.y = this.stage.stageHeight/2 - this.loadingAnimation.height/2
+			addChild(loadingAnimation);
+			
 			// Load config and set handler
 			var loader:URLLoader = new URLLoader();
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
@@ -86,63 +114,109 @@ package {
 		 }
 
 		/**
-		 * Config has loaded. Override any specified configuration. Load slides
+		 * Config has loaded. Override any specified configuration. Load movies
 		 * and set handlers.
 		 * 
-		 * @param event Event.COMPLETE fired when config.xml loads
+		 * @param event Event.COMPLETE fired when config.xml has loaded
 		 */
 		protected function handleXMLLoadComplete(event:Event):void {
 
-			try {
-				var XMLConfig:XML = new XML(event.target.data);
+			var XMLConfig:XML = new XML(event.target.data);
+			
+			// Look for XML equivalents of config properties in the root 
+			// node of the XML
+			for(var configName:String in config) {					
 				
-				// Look for XML equivalents of config properties in the root node of the XML
-				for(var configName:String in config) {					
-					
-					var XMLName:String = configName.replace(/_/g, '-');
-					var XMLValue:String = XMLConfig.attribute(XMLName)[0];
-					if(XMLValue) {
-						switch(typeof config[configName]){
-							case "number":
-								config[configName] = parseInt(XMLValue);
-								break;
-							case "string":
-								config[configName] = XMLValue;
-								break
-						}
+				var XMLName:String = configName.replace(/_/g, '-');
+				var XMLValue:String = XMLConfig.attribute(XMLName)[0];
+				if(XMLValue) {
+					switch(typeof config[configName]){
+						case "number":
+							config[configName] = parseInt(XMLValue);
+							break;
+						case "string":
+							config[configName] = XMLValue;
+							break
 					}
 				}
-				
-				// Load each slide defined in config
-				numSlides = XMLConfig.movie.length();
-				var count:uint = 0;
-				for each(var movie:XML in XMLConfig.movie) {
-					var loader:Loader = new Loader();
-					loader.contentLoaderInfo.addEventListener(
-						Event.COMPLETE,
-						function(sourceIndex:uint, href:String):Function {
-							return function(e:Event):void {
-								handleMovieComplete(e, sourceIndex, href);
-							}
-						}(count++, movie.@href[0])
-					);
-					var src:String = this.RESOURCES_DIRECTORY + "/" + movie.@src;
-					loader.load(new URLRequest(src));
-				}
 			}
-			catch(e:Error) {
-				trace(e.message);
+			
+			// Loop through config movies, add each to an array to reorder
+			var count:uint = 0;
+			for each(var movie:XML in XMLConfig.movie) {
+				movieConfigs.push(movie);
 			}
+			
+			// Juggle order if config order set to random
+			if(config.order == "random") {
+				movieConfigs.sort(function():Number {
+					return Math.random() > 0.5 ? 1 : -1;
+				});
+			}
+			
+			// Store reference to play order, so this can be established quickly
+			// when this element is detached from this array
+			for(var i:uint = 0 ; i < movieConfigs.length ; i++) {
+				movieConfigs[i].@playIndex = i;
+			}
+			
+			// Load the first movie, from here on, movies loaded by other movies
+			loadMovie(movieConfigs[0], true);
 		}
 		
 		/**
-		 * A slide's movie has loaded. Examine to determine if this is a masked
-		 * movie, and if so, target the mask movie for all measurements, 
-		 * stopping and rewinding etc. 
+		 * Load movie
+		 * 
+		 * @parm movie the XML element from config representing the movie
 		 */
-		protected function handleMovieComplete(e:Event, sourceIndex:uint, href:String):void {
+		 protected function loadMovie(movie:XML, isFirstMovie:Boolean=false):void {
+		 	var resourceDirectory:String = this.RESOURCES_DIRECTORY;
+		 	var closure:Function = function():void {
+				var loader:Loader = new Loader();
+				loader.contentLoaderInfo.addEventListener(
+					Event.COMPLETE, 
+					function(e:Event):void {
+						movieLoaded(e, movie);
+					}
+				);
+				var src:String = resourceDirectory + "/" + movie.@src;
+				loader.load(new URLRequest(src));
+		 	}
+		 	// Delay defaults to zero if not defined on element
+		 	var delay:uint = parseInt(movie.@delay);
+		 	// Make sure that there's a minimum delay for the first movie to 
+		 	// avoid first load getting last and also loading animation flicker
+		 	if(isFirstMovie) {
+		 		delay = Math.max(delay, INITIAL_DELAY);
+		 	}
+		 	setTimeout(closure, delay);
+		 }
+		 
+		 /**
+		 * A movie has loaded, add it at the bottom of the movies stack. If it's 
+		 * the first, play it. If is a next, load it.
+		 */
+		 protected function movieLoaded(event:Event, movieConfig:XML):void {
 			
-			var movie:MovieClip = e.target.content as MovieClip;
+			var movie:MovieClip = event.target.content as MovieClip;
+			
+		 	// Save any values from movie config into the movie
+			movie._playIndex_ = parseInt(movieConfig.@playIndex);
+			movie._src_ = movieConfig.@src;
+			movie._href_ = movieConfig.@href;
+			
+			// Add other metadata
+			movie._isPlaying_ = false;
+			
+			// If necessary, add click handler
+			if(movie._href_) {
+				movie.addEventListener(MouseEvent.CLICK, function(movie:MovieClip):Function {
+					return function():void {
+						movieClickHandler(movie);
+					}
+				}(movie));
+				movie.buttonMode = true;
+			}
 
 			// Assume the slide is the entire movie
 			movie._slide_ = movie;
@@ -156,89 +230,43 @@ package {
 			// Add a reference back from the slide to the movie
 			movie._slide_._movie_ = movie;
 			
-			// Rewind and hide
+			// Rewind
 			movie._slide_.gotoAndStop(1);
+			
+			// Hide incase movie starts with a fade in
 			movie._slide_.visible = false;
 			
-			// Save reference to the order that this movie had in the XML
-			movie._sourceIndex_ = sourceIndex;
+			// Add movie to movies collection
+			movies.addChildAt(movie, 0);
 			
-			// If a @href existed in the XML element
-			if(href) {
-				movie._href_ = href;
-				movie.addEventListener(MouseEvent.CLICK, function(movie:MovieClip):Function {
-					return function():void {
-						movieClickHandler(movie);
-					}
-				}(movie));
-				movie.buttonMode = true;
+			// DEBUG: show stacking order
+			//movie.x = movie.y = movieConfig.@playIndex * 30;
+			
+			// Start this movie playing if it's the first
+			if(movie._playIndex_ == 0) {
+				playSlideInMovie(movie);
 			}
 			
-			this.addChild(movie);
-			
-			// If all the slides have loaded, stack in order and play
-			if(numChildren == numSlides) {
-				stackMovies();
-				playSlideAt(numChildren-1);
+			// Load the next movie to play, if there is one
+			var nextMovie:uint = movie._playIndex_ + 1;
+			if(movieConfigs.length > nextMovie) {
+				loadMovie(movieConfigs[nextMovie]);
 			}
-		}
-		
-		/**
-		 * Movie was clicked
-		 */
-		protected function movieClickHandler(movie:MovieClip):void {
+		 	
+		 }
 
-			try {
-				navigateToURL( new URLRequest(movie._href_), "_self" );
-			}
-			catch(e:Error) {
-				trace(e.message);
-			}
-
-		}
-		
-		/**
-		 * Stack the movies in the order which they will play, first on top
-		 */
-		protected function stackMovies():void {	
-			
-			// Create an array representing child movies
-			var children:Array = new Array(numChildren);
-			for(var i:uint = 0 ; i < numChildren ; i++) {
-				children[i] = this.getChildAt(i);
-			}
-			switch(config.order) {
-				
-			 case "random":
-				children.sort(function():Number {
-					return Math.random() > 0.5 ? 1 : -1;
-				});
-				break;
-			
-			case "source":
-				children.sort(function(a:MovieClip, b:MovieClip):Number {
-					return a._sourceIndex_ > b._sourceIndex_  ? -1 : 1;
-				});
-				break;
-			}
-			
-			// Stack each child according to its sorted index
-			for(i = 0 ; i < numChildren ; i++) {
-				var movie:MovieClip = children[i] as MovieClip;
-				setChildIndex(movie, i);
-				trace("Stacking", i);
-				movie.left = movie.top = i * 10;
-			}
-		}
 		
 		/**
 		 * Start a slide playing and attach enterFrame handler.
 		 * 
+		 * @param index the index of the movie within movies stack
+		 * 
 		 * @see #handleSlideEnterFrame()
 		 */
-		protected function playSlideAt(index:uint):void {
-			var movie:MovieClip = getChildAt(index) as MovieClip;
+		protected function playSlideInMovie(movie:MovieClip):void {
 			movie._slide_.addEventListener(Event.ENTER_FRAME, handleSlideEnterFrame);
+			this.loadingAnimation.visible = false;
+			movie._isPlaying_ = true;
 			movie._slide_.play(); 
 		}
 		
@@ -250,13 +278,59 @@ package {
 		 * stopped.
 		 */
 		protected function handleSlideEnterFrame(e:Event):void {
-			var slide:MovieClip = e.target as MovieClip;
 			
-			// If this slide has not fully loaded
-			if(slide.framesLoaded != slide.totalFrames) {
-				slide.gotoAndPlay(1);
-				return;
+			var slide:MovieClip = e.target as MovieClip;
+			this.applyTransitions(slide);
+			
+			// Find the next slide's movie, may be this movie if there's only 
+			// one movie. May be null if the next movie is yet to load.
+			var nextPlayIndex:uint = slide._movie_._playIndex_ > movieConfigs.length-2 ? 0 : slide._movie_._playIndex_ + 1;
+			var nextMovie:MovieClip = null;
+			for(var i:uint = 0 ; i < movies.numChildren ; i++) {
+				var movie:MovieClip = movies.getChildAt(i) as MovieClip;
+				if(movie._playIndex_ == nextPlayIndex) {
+					nextMovie = movie;
+				}
 			}
+			
+			// If this is the final frame
+			if(slide.currentFrame == slide.totalFrames) {
+				// If this is the only movie, loop
+				if(nextMovie == slide._movie_) {
+					slide.gotoAndPlay(1);
+				}
+				else {
+					// Pause
+					slide.stop();
+					// If the next movie is playing, reset this one
+					if(nextMovie && nextMovie._isPlaying_) {
+						slide.removeEventListener(Event.ENTER_FRAME, handleSlideEnterFrame);
+						slide.gotoAndStop(1);
+						slide._movie_._isPlaying_ = false;
+						movies.setChildIndex(slide._movie_, 0);
+					}
+				}
+			}
+			// If it's time to play the next slide and it isn't playing
+			if(slide.currentFrame >= slide.totalFrames - config.overlap) {
+				// If it hasn't loaded, display the loading animation
+				if(nextMovie == null) {
+					loadingAnimation.visible = true;
+				}
+				if(nextMovie && !nextMovie._isPlaying_) {
+					// Make sure it's under this one in stack and play
+					movies.setChildIndex(nextMovie, movies.getChildIndex(slide._movie_)-1);
+					playSlideInMovie(nextMovie);
+				}
+			}
+		}
+		
+		/**
+		 * Apply transitions based on configuration settings and current frame
+		 * 
+		 * @slide The MovieClip to apply transitions to
+		 */
+		 protected function applyTransitions(slide:MovieClip):void {
 			
 			var colour:ColorTransform = new ColorTransform;
 
@@ -304,24 +378,19 @@ package {
 			
 			// Apply the colour transformation
 			slide.transform.colorTransform = colour;
+			
+			// Movie may be hidden in anticipation of fade in
 			slide.visible = true;
-			
-			// If this is the last frame
-			if(slide.currentFrame == slide.totalFrames) {
-				slide.removeEventListener(Event.ENTER_FRAME, handleSlideEnterFrame);
-				slide.gotoAndStop(1);
-				setChildIndex(slide._movie_, 0);
-				// If there is no overlap, now's the time to play the next slide
-				if(config.overlap == 0) {
-					playSlideAt(numChildren-1);
-				}
+		 }
+		
+		/**
+		 * Movie was clicked
+		 */
+		protected function movieClickHandler(movie:MovieClip):void {
+			try {
+				navigateToURL( new URLRequest(movie._href_), "_self" );
 			}
-			
-			// If there is an overlap, and that many frames remain
-			if(slide.currentFrame == slide.totalFrames - config.overlap) {
-				playSlideAt(numChildren-2);
-			}
+			catch(e:Error) {}
 		}
-	}
-	
+	}	
 }

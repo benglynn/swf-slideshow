@@ -1,5 +1,11 @@
 <?xml version="1.0"?>
-<config alpha-fade-in="20" alpha-fade-out="20" brightness-fade-in="60" brightness-fade-out="60" brightness-offset="80" order="random">
+<config 
+    alpha-fade-in="20" 
+    alpha-fade-out="20" 
+    brightness-fade-in="60" 
+    brightness-fade-out="60" 
+    brightness-offset="80" 
+    order="random">
     <movie src="wren.swf" href="/work/case-studies/wren"/>
     <movie src="philips.swf" href="/work/projects/philips-live-earth-internal-communications"/>
     <movie src="sap.swf" href="/work/case-studies/sap"/>

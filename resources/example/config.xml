@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<config 
+    overlap="5"
+    alpha-fade-in="40" 
+    alpha-fade-out="20" 
+    brightness-fade-in="0" 
+    brightness-fade-out="0" 
+    brightness-offset="-100" 
+    order="source">
+    <movie src="a.swf" href="http://www.bbc.co.uk"/>
+    <!--
+    <movie src="b.swf" href="http://www.bbc.co.uk"/>
+    <movie src="c.swf" href="http://www.bbc.co.uk"/>
+    -->
+</config>

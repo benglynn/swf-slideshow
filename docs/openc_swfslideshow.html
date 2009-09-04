@@ -4,7 +4,7 @@
 <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link rel="stylesheet" href="style.css" type="text/css" media="screen">
 <link rel="stylesheet" href="print.css" type="text/css" media="print">
-<meta content="openc_swfslideshow,RESOURCES_DIRECTORY,config,numSlides,handleMovieComplete,handleSlideEnterFrame,handleXMLLoadComplete,initialiseConfig,movieClickHandler,playSlideAt,stackMovies" name="keywords">
+<meta content="openc_swfslideshow,RESOURCES_DIRECTORY,config,loadingAnimation,loadingAnimationRaw,movieConfigs,movies,applyTransitions,handleSlideEnterFrame,handleXMLLoadComplete,initialiseConfig,loadMovie,movieClickHandler,movieLoaded,playSlideInMovie" name="keywords">
 <title>openc_swfslideshow</title>
 </head>
 <body>
@@ -43,8 +43,7 @@ if (!isEclipse() || window.name != ECLIPSE_FRAME_NAME) {titleBar_setSubTitle("Cl
 </table>
 <p></p>
   This movie parses a config file and plays through a series of swf movies
-  (called slides)` with configurable alpha and brightness transitions 
-  between each one.
+  with configurable alpha and brightness transitions between each one.
   <p></p>
 <br>
 <hr>
@@ -63,8 +62,26 @@ if (!isEclipse() || window.name != ECLIPSE_FRAME_NAME) {titleBar_setSubTitle("Cl
 </td><td class="summaryTableOwnerCol">openc_swfslideshow</td>
 </tr>
 <tr class="">
-<td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol"><a class="signatureLink" href="#numSlides">numSlides</a> : uint<div class="summaryTableDescription">
-   The number of slides
+<td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol"><a class="signatureLink" href="#loadingAnimation">loadingAnimation</a> : MovieClipLoaderAsset<div class="summaryTableDescription">
+   Loading nimation
+   </div>
+</td><td class="summaryTableOwnerCol">openc_swfslideshow</td>
+</tr>
+<tr class="">
+<td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol"><a class="signatureLink" href="#loadingAnimationRaw">loadingAnimationRaw</a> : Class<div class="summaryTableDescription">
+   Loading animation raw emed
+   </div>
+</td><td class="summaryTableOwnerCol">openc_swfslideshow</td>
+</tr>
+<tr class="">
+<td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol"><a class="signatureLink" href="#movieConfigs">movieConfigs</a> : Array<div class="summaryTableDescription">
+   Movies array, hold movie XML elements from config in play order
+   </div>
+</td><td class="summaryTableOwnerCol">openc_swfslideshow</td>
+</tr>
+<tr class="">
+<td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol"><a class="signatureLink" href="#movies">movies</a> : DisplayObjectContainer<div class="summaryTableDescription">
+   Movies container
    </div>
 </td><td class="summaryTableOwnerCol">openc_swfslideshow</td>
 </tr>
@@ -103,9 +120,11 @@ if (!isEclipse() || window.name != ECLIPSE_FRAME_NAME) {titleBar_setSubTitle("Cl
 <tr class="">
 <td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol">
 <div class="summarySignature">
-<a class="signatureLink" href="#handleMovieComplete()">handleMovieComplete</a>(e:Event, sourceIndex:uint, href:String):void</div>
+<a class="signatureLink" href="#applyTransitions()">applyTransitions</a>(slide:MovieClip):void</div>
 <div class="summaryTableDescription">
-   A slide's movie has loaded.</div>
+   Apply transitions based on configuration settings and current frame
+   
+   </div>
 </td><td class="summaryTableOwnerCol">openc_swfslideshow</td>
 </tr>
 <tr class="">
@@ -135,6 +154,16 @@ if (!isEclipse() || window.name != ECLIPSE_FRAME_NAME) {titleBar_setSubTitle("Cl
 <tr class="">
 <td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol">
 <div class="summarySignature">
+<a class="signatureLink" href="#loadMovie()">loadMovie</a>(movie:XML, isFirstMovie:Boolean = false):void</div>
+<div class="summaryTableDescription">
+   Load movie
+   
+   </div>
+</td><td class="summaryTableOwnerCol">openc_swfslideshow</td>
+</tr>
+<tr class="">
+<td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol">
+<div class="summarySignature">
 <a class="signatureLink" href="#movieClickHandler()">movieClickHandler</a>(movie:MovieClip):void</div>
 <div class="summaryTableDescription">
    Movie was clicked
@@ -144,18 +173,17 @@ if (!isEclipse() || window.name != ECLIPSE_FRAME_NAME) {titleBar_setSubTitle("Cl
 <tr class="">
 <td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol">
 <div class="summarySignature">
-<a class="signatureLink" href="#playSlideAt()">playSlideAt</a>(index:uint):void</div>
+<a class="signatureLink" href="#movieLoaded()">movieLoaded</a>(event:Event, movieConfig:XML):void</div>
 <div class="summaryTableDescription">
-   Start a slide playing and attach enterFrame handler.</div>
+   A movie has loaded, add it at the bottom of the movies stack.</div>
 </td><td class="summaryTableOwnerCol">openc_swfslideshow</td>
 </tr>
 <tr class="">
 <td class="summaryTablePaddingCol">&nbsp;</td><td class="summaryTableInheritanceCol">&nbsp;</td><td class="summaryTableSignatureCol">
 <div class="summarySignature">
-<a class="signatureLink" href="#stackMovies()">stackMovies</a>():void</div>
+<a class="signatureLink" href="#playSlideInMovie()">playSlideInMovie</a>(movie:MovieClip):void</div>
 <div class="summaryTableDescription">
-   Stack the movies in the order which they will play, first on top
-   </div>
+   Start a slide playing and attach enterFrame handler.</div>
 </td><td class="summaryTableOwnerCol">openc_swfslideshow</td>
 </tr>
 </table>
@@ -177,15 +205,45 @@ showHideInherited();
 <code>protected var config:Object</code><p>
    A store for configuration after parsing conifg.xml
    </p></div>
-<a name="numSlides"></a>
+<a name="loadingAnimation"></a>
 <table cellspacing="0" cellpadding="0" class="detailHeader">
 <tr>
-<td class="detailHeaderName">numSlides</td><td class="detailHeaderType">property</td><td class="detailHeaderRule">&nbsp;</td>
+<td class="detailHeaderName">loadingAnimation</td><td class="detailHeaderType">property</td><td class="detailHeaderRule">&nbsp;</td>
 </tr>
 </table>
 <div class="detailBody">
-<code>protected var numSlides:uint</code><p>
-   The number of slides
+<code>protected var loadingAnimation:MovieClipLoaderAsset</code><p>
+   Loading nimation
+   </p></div>
+<a name="loadingAnimationRaw"></a>
+<table cellspacing="0" cellpadding="0" class="detailHeader">
+<tr>
+<td class="detailHeaderName">loadingAnimationRaw</td><td class="detailHeaderType">property</td><td class="detailHeaderRule">&nbsp;</td>
+</tr>
+</table>
+<div class="detailBody">
+<code>protected var loadingAnimationRaw:Class</code><p>
+   Loading animation raw emed
+   </p></div>
+<a name="movieConfigs"></a>
+<table cellspacing="0" cellpadding="0" class="detailHeader">
+<tr>
+<td class="detailHeaderName">movieConfigs</td><td class="detailHeaderType">property</td><td class="detailHeaderRule">&nbsp;</td>
+</tr>
+</table>
+<div class="detailBody">
+<code>protected var movieConfigs:Array</code><p>
+   Movies array, hold movie XML elements from config in play order
+   </p></div>
+<a name="movies"></a>
+<table cellspacing="0" cellpadding="0" class="detailHeader">
+<tr>
+<td class="detailHeaderName">movies</td><td class="detailHeaderType">property</td><td class="detailHeaderRule">&nbsp;</td>
+</tr>
+</table>
+<div class="detailBody">
+<code>protected var movies:DisplayObjectContainer</code><p>
+   Movies container
    </p></div>
 <a name="RESOURCES_DIRECTORY"></a>
 <table cellspacing="0" cellpadding="0" class="detailHeader">
@@ -223,33 +281,20 @@ showHideInherited();
 </div>
 <a name="methodDetail"></a>
 <div class="detailSectionHeader">Method detail</div>
-<a name="handleMovieComplete()"></a>
+<a name="applyTransitions()"></a>
 <table cellspacing="0" cellpadding="0" class="detailHeader">
 <tr>
-<td class="detailHeaderName">handleMovieComplete</td><td class="detailHeaderParens">()</td><td class="detailHeaderType">method</td>
+<td class="detailHeaderName">applyTransitions</td><td class="detailHeaderParens">()</td><td class="detailHeaderType">method</td>
 </tr>
 </table>
 <div class="detailBody">
-<code>protected function handleMovieComplete(e:Event, sourceIndex:uint, href:String):void</code><p>
-   A slide's movie has loaded. Examine to determine if this is a masked
-   movie, and if so, target the mask movie for all measurements, 
-   stopping and rewinding etc. 
+<code>protected function applyTransitions(slide:MovieClip):void</code><p>
+   Apply transitions based on configuration settings and current frame
+   
    </p><span class="label">Parameters</span>
 <table border="0" cellspacing="0" cellpadding="0">
 <tr>
-<td width="20px"></td><td><code><span class="label">e</span>:Event</code></td>
-</tr>
-<tr>
-<td class="paramSpacer">&nbsp;</td>
-</tr>
-<tr>
-<td width="20px"></td><td><code><span class="label">sourceIndex</span>:uint</code></td>
-</tr>
-<tr>
-<td class="paramSpacer">&nbsp;</td>
-</tr>
-<tr>
-<td width="20px"></td><td><code><span class="label">href</span>:String</code></td>
+<td width="20px"></td><td><code><span class="label">slide</span>:MovieClip</code></td>
 </tr>
 </table>
 </div>
@@ -281,13 +326,13 @@ showHideInherited();
 </table>
 <div class="detailBody">
 <code>protected function handleXMLLoadComplete(event:Event):void</code><p>
-   Config has loaded. Override any specified configuration. Load slides
+   Config has loaded. Override any specified configuration. Load movies
    and set handlers.
    
    </p><span class="label">Parameters</span>
 <table border="0" cellspacing="0" cellpadding="0">
 <tr>
-<td width="20px"></td><td><code><span class="label">event</span>:Event</code> &mdash; Event.COMPLETE fired when config.xml loads
+<td width="20px"></td><td><code><span class="label">event</span>:Event</code> &mdash; Event.COMPLETE fired when config.xml has loaded
    </td>
 </tr>
 </table>
@@ -303,6 +348,29 @@ showHideInherited();
    Sets default configuration options. Strangely, this needs to be in a
     different frame to that which loads the XML
    </p></div>
+<a name="loadMovie()"></a>
+<table cellspacing="0" cellpadding="0" class="detailHeader">
+<tr>
+<td class="detailHeaderName">loadMovie</td><td class="detailHeaderParens">()</td><td class="detailHeaderType">method</td><td class="detailHeaderRule">&nbsp;</td>
+</tr>
+</table>
+<div class="detailBody">
+<code>protected function loadMovie(movie:XML, isFirstMovie:Boolean = false):void</code><p>
+   Load movie
+   
+   </p><span class="label">Parameters</span>
+<table border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td width="20px"></td><td><code><span class="label">movie</span>:XML</code></td>
+</tr>
+<tr>
+<td class="paramSpacer">&nbsp;</td>
+</tr>
+<tr>
+<td width="20px"></td><td><code><span class="label">isFirstMovie</span>:Boolean</code> (default = <code>false</code>)<code></code></td>
+</tr>
+</table>
+</div>
 <a name="movieClickHandler()"></a>
 <table cellspacing="0" cellpadding="0" class="detailHeader">
 <tr>
@@ -319,20 +387,45 @@ showHideInherited();
 </tr>
 </table>
 </div>
-<a name="playSlideAt()"></a>
+<a name="movieLoaded()"></a>
 <table cellspacing="0" cellpadding="0" class="detailHeader">
 <tr>
-<td class="detailHeaderName">playSlideAt</td><td class="detailHeaderParens">()</td><td class="detailHeaderType">method</td><td class="detailHeaderRule">&nbsp;</td>
+<td class="detailHeaderName">movieLoaded</td><td class="detailHeaderParens">()</td><td class="detailHeaderType">method</td><td class="detailHeaderRule">&nbsp;</td>
 </tr>
 </table>
 <div class="detailBody">
-<code>protected function playSlideAt(index:uint):void</code><p>
+<code>protected function movieLoaded(event:Event, movieConfig:XML):void</code><p>
+   A movie has loaded, add it at the bottom of the movies stack. If it's 
+   the first, play it. If is a next, load it.
+   </p><span class="label">Parameters</span>
+<table border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td width="20px"></td><td><code><span class="label">event</span>:Event</code></td>
+</tr>
+<tr>
+<td class="paramSpacer">&nbsp;</td>
+</tr>
+<tr>
+<td width="20px"></td><td><code><span class="label">movieConfig</span>:XML</code></td>
+</tr>
+</table>
+</div>
+<a name="playSlideInMovie()"></a>
+<table cellspacing="0" cellpadding="0" class="detailHeader">
+<tr>
+<td class="detailHeaderName">playSlideInMovie</td><td class="detailHeaderParens">()</td><td class="detailHeaderType">method</td><td class="detailHeaderRule">&nbsp;</td>
+</tr>
+</table>
+<div class="detailBody">
+<code>protected function playSlideInMovie(movie:MovieClip):void</code><p>
    Start a slide playing and attach enterFrame handler.
    
    </p><span class="label">Parameters</span>
 <table border="0" cellspacing="0" cellpadding="0">
 <tr>
-<td width="20px"></td><td><code><span class="label">index</span>:uint</code></td>
+<td width="20px"></td><td><code><span class="label">movie</span>:MovieClip</code> &mdash; the index of the movie within movies stack
+   
+   </td>
 </tr>
 </table>
 <p>
@@ -342,16 +435,6 @@ showHideInherited();
 <a href="openc_swfslideshow.html#handleSlideEnterFrame()" target="">handleSlideEnterFrame()</a>
 </div>
 </div>
-<a name="stackMovies()"></a>
-<table cellspacing="0" cellpadding="0" class="detailHeader">
-<tr>
-<td class="detailHeaderName">stackMovies</td><td class="detailHeaderParens">()</td><td class="detailHeaderType">method</td><td class="detailHeaderRule">&nbsp;</td>
-</tr>
-</table>
-<div class="detailBody">
-<code>protected function stackMovies():void</code><p>
-   Stack the movies in the order which they will play, first on top
-   </p></div>
 <br>
 <br>
 <hr>
