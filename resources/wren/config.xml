@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 
 <config
+	width="930"
+	height="300"
 	alpha-fade-in="10" 
 	alpha-fade-out="30" 
 	brightness-fade-in="0" 

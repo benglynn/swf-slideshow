@@ -16,7 +16,7 @@ package {
 	 * individual slides. Width and height also set to match example swfs though 
 	 * these will be overriden when movie embedded in web page
 	 */
-	[SWF (frameRate="21", backgroundColor="0xffffff", pageTitle="openc.swfslideshow", width=730, height=410)]
+	[SWF (frameRate="21", backgroundColor="0xffffff", pageTitle="openc.swfslideshow")]
 	
 	/**
 	 * This movie parses a config file and plays through a series of swf movies
@@ -53,7 +53,7 @@ package {
 		/**
 		 * The directory from which to load config.xml
 		 */
-		protected var RESOURCES_DIRECTORY:String = "../resources/opensite";
+		protected var RESOURCES_DIRECTORY:String = "../resources/wren";
 		
 		/**
 		 * A store for configuration after parsing conifg.xml
@@ -86,12 +86,6 @@ package {
 			movies = new MovieClip();
 			addChild(movies);
 			
-			// Position and display loading animation
-			loadingAnimation = new loadingAnimationRaw();
-			this.loadingAnimation.x = this.stage.stageWidth/2 - this.loadingAnimation.width/2
-			this.loadingAnimation.y = this.stage.stageHeight/2 - this.loadingAnimation.height/2
-			addChild(loadingAnimation);
-			
 			// Load config and set handler
 			var loader:URLLoader = new URLLoader();
 			loader.dataFormat = URLLoaderDataFormat.TEXT;
@@ -104,6 +98,8 @@ package {
 		 *  different frame to that which loads the XML
 		 */
 		 protected function initialiseConfig():void {
+		 	config.width = 60;
+		 	config.height = 60;
 			config.alpha_fade_in = 0;
 		 	config.alpha_fade_out = 0;
 			config.brightness_fade_in = 0;
@@ -140,6 +136,13 @@ package {
 					}
 				}
 			}
+			
+			
+			// Position and display loading animation
+			loadingAnimation = new loadingAnimationRaw();
+			this.loadingAnimation.x = config.width/2 - this.loadingAnimation.width/2
+			this.loadingAnimation.y = config.height/2 - this.loadingAnimation.height/2
+			addChild(loadingAnimation);
 			
 			// Loop through config movies, add each to an array to reorder
 			var count:uint = 0;
